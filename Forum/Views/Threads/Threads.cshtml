@@ -1,0 +1,15 @@
+﻿@model Forum.Models.Forum.ThreadsModel
+
+@{
+	ViewBag.Title = "title";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="btn-group-vertical threads-name">
+	@foreach (var t in Model.ThreadNames)
+	{
+		<a class="message-block thread-name btn btn-default" href='@Url.Action("Thread", "Thread",new RouteValueDictionary(new Dictionary<string, object> { {"threadName", t} }))'>
+			@t
+		</a>
+	}
+</div>

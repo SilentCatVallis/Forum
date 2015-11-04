@@ -1,0 +1,64 @@
+﻿@using System.ServiceModel.Activities
+@using System.Web.UI.HtmlControls
+@model Forum.Models.Forum.ThreadModel
+
+@{
+	ViewBag.Title = "title";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="thread-name">
+	@(Model.ThreadName??"Programming")
+</div>
+<ul class="forum">
+	@foreach (var m in Model.Messages)
+	{
+		<li>
+			<hr/>
+			<div class="message-block">
+				<div class="forum-message forum-author">
+					<a>@m.Author</a>
+				</div>
+				<div class="forum-message forum-text">
+					<a>@m.Text</a>
+				</div>
+				<div class="forum-message forum-time">
+					<a>@m.Time</a>
+				</div>
+			</div>
+		</li>
+	}
+	<li>
+		<hr/>
+		<div class="forum-message forum-author">
+			<a>Write message</a>
+		</div>
+		<form>
+			<div class="forum-message forum-text">
+				@{ var textArea = Html.TextArea("message", new Dictionary<string, object> { { "class", "form-control message-form" }, { "placeholder", "Your message" }, { "name", "message-field" } }); }
+				@textArea
+				@*<textarea id="message" class="form-control message-form" placeholder="Your message" aria-describedby="basic-addon2"></textarea>*@
+			</div>
+			<a class="forum-message forum-time btn-group" href='@Url.Action("SendMessage", "Thread", new RouteValueDictionary(new Dictionary<string, object>
+				                                                    {
+					                                                    {"returnUrl", Url},
+					                                                    {"threadName", Model.ThreadName},
+					                                                    {"pageIndex", Model.PageIndex - 1},
+					                                                    {"message", }
+				                                                    }))'>
+				<span class="btn btn-default">Send message</span>
+			</a>
+			}
+		</form>
+	</li>
+</ul>
+<div class="btn-group">
+	<a class="btn btn-default nav-arrow" href='@Url.Action("Thread", "Thread", new RouteValueDictionary(new Dictionary<string, object> {{"threadName", Model.ThreadName}, {"pageIndex", Model.PageIndex - 1}}))'>
+		<span class="glyphicon glyphicon-chevron-left"></span>
+	</a>
+	<a class="btn btn-default nav-arrow page-index">
+		<span class="glyphicon">@Model.PageIndex</span>
+	</a>
+	<a class="btn btn-default nav-arrow" href='@Url.Action("Thread", "Thread", new RouteValueDictionary(new Dictionary<string, object> {{"threadName", Model.ThreadName}, {"pageIndex", Model.PageIndex + 1}}))'>
+		<span class="glyphicon glyphicon-chevron-right"></span>
+	</a>
+</div>
