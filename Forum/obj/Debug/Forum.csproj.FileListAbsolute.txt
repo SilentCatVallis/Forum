@@ -53,3 +53,5 @@ c:\users\213\documents\visual studio 2013\Projects\Forum\Forum\bin\Microsoft.Owi
 c:\users\213\documents\visual studio 2013\Projects\Forum\Forum\obj\Debug\Forum.csprojResolveAssemblyReference.cache
 c:\users\213\documents\visual studio 2013\Projects\Forum\Forum\obj\Debug\Forum.dll
 c:\users\213\documents\visual studio 2013\Projects\Forum\Forum\obj\Debug\Forum.pdb
+C:\Users\213\documents\visual studio 2013\Projects\Forum\Forum\bin\BotDetect.dll
+C:\Users\213\documents\visual studio 2013\Projects\Forum\Forum\bin\BotDetect.Web.UI.Mvc.dll

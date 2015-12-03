@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="IIS Web Application Name" description="" value="deniaaforum" tags="IisApp">
+    <parameterEntry kind="ProviderPath" scope="IisApp" match="^C:\\Users\\213\\documents\\visual\ studio\ 2013\\Projects\\Forum\\Forum\\obj\\Release\\Package\\PackageTmp$" />
+    <parameterEntry kind="ProviderPath" scope="setAcl" match="^C:\\Users\\213\\documents\\visual\ studio\ 2013\\Projects\\Forum\\Forum\\obj\\Release\\Package\\PackageTmp$" />
+  </parameter>
+  <parameter name="Forum.Models.ForumDatabase-Web.config Connection String" description="" value="Data Source=tcp:vxb9s4gap4.database.windows.net,1433;Initial Catalog=deniaafATVFClJp1;User Id=Deniaa@vxb9s4gap4;Password=Gflib_cfif1" tags="">
+    <parameterEntry kind="XmlFile" scope="C:\\Users\\213\\documents\\visual\ studio\ 2013\\Projects\\Forum\\Forum\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='Forum.Models.ForumDatabase']/@connectionString" />
+  </parameter>
+  <parameter name="ForumDatabase-Web.config Connection String" description="" value="Data Source=tcp:vxb9s4gap4.database.windows.net,1433;Initial Catalog=ForumDatabase;User Id=Deniaa@vxb9s4gap4;Password=Gflib_cfif1" tags="">
+    <parameterEntry kind="XmlFile" scope="C:\\Users\\213\\documents\\visual\ studio\ 2013\\Projects\\Forum\\Forum\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='ForumDatabase']/@connectionString" />
+  </parameter>
+  <parameter name="MyDatabase-Web.config Connection String" description="" value="data source=tcp:vxb9s4gap4.database.windows.net,1433;initial catalog=deniaafATVFClJp1;user id=Deniaa@vxb9s4gap4;password=Gflib_cfif1;MultipleActiveResultSets=True;App=EntityFramework" tags="" />
+</parameters>

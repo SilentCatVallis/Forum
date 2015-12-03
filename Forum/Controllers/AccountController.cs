@@ -1,46 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Security.Claims;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using BotDetect.Web.UI.Mvc;
+using Forum.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
-using Owin;
-using Forum.Models;
+using Microsoft.Owin.Security.DataProtection;
 
 namespace Forum.Controllers
 {
+	public class EmailFormModel
+	{
+		[Required, Display(Name = "Your name")]
+		public string FromName { get; set; }
+		[Required, Display(Name = "Your email"), EmailAddress]
+		public string FromEmail { get; set; }
+		[Required]
+		public string Message { get; set; }
+	}
+
+
     [Authorize]
     public class AccountController : Controller
-    {
-        private ApplicationUserManager _userManager;
+	{
 
-        public AccountController()
-        {
-        }
+		private readonly ForumDatabase ForumDatabase = new ForumDatabase();
+	    private DpapiDataProtectionProvider provider;
+	    public UserManager<ApplicationUser> UserManager { get; private set; }
 
-        public AccountController(ApplicationUserManager userManager)
-        {
-            UserManager = userManager;
-        }
+		public AccountController()
+			: this(new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ForumDatabase())))
+		{
+			ForumDatabase = new ForumDatabase();
+			UserManager.UserValidator =
+				new UserValidator<ApplicationUser>(UserManager)
+				{
+					AllowOnlyAlphanumericUserNames = false
+				};
+			//provider = new DpapiDataProtectionProvider("Forum");
+			//UserManager.UserTokenProvider = new DataProtectorTokenProvider<ApplicationUser>(provider.Create("EmailConfirmation"));
+		}
 
-        public ApplicationUserManager UserManager {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
-
-        //
-        // GET: /Account/Login
+		public AccountController(UserManager<ApplicationUser> userManager)
+		{
+			UserManager = userManager;
+		}
+        
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
@@ -57,8 +69,8 @@ namespace Forum.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await UserManager.FindAsync(model.Email, model.Password);
-                if (user != null)
+                var user = await UserManager.FindAsync(model.Name, model.Password);
+                if (user != null && user.EmailConfirmed)
                 {
                     await SignInAsync(user, model.RememberMe);
                     return RedirectToLocal(returnUrl);
@@ -73,7 +85,9 @@ namespace Forum.Controllers
             return View(model);
         }
 
-        //
+		private static Dictionary<string, string> EmailConfirmationTokens = new Dictionary<string, string>();
+
+			//
         // GET: /Account/Register
         [AllowAnonymous]
         public ActionResult Register()
@@ -83,38 +97,86 @@ namespace Forum.Controllers
 
         //
         // POST: /Account/Register
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser() { UserName = model.Email, Email = model.Email };
-                IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    await SignInAsync(user, isPersistent: false);
+	    [HttpPost]
+	    [AllowAnonymous]
+	    [ValidateAntiForgeryToken]
+	    [CaptchaValidation("CaptchaCode", "SampleCaptcha", "Incorrect CAPTCHA code!")]
+	    public async Task<ActionResult> Register(RegisterViewModel model)
+	    {
 
-                    // For more information on how to enable account confirmation and password reset please visit http://go.microsoft.com/fwlink/?LinkID=320771
-                    // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    AddErrors(result);
-                }
-            }
+		    if (ModelState.IsValid)
+		    {
+			    var user = new ApplicationUser
+			    {
+				    UserName = model.UserName,
+				    Email = model.Email,
+				    EmailConfirmed = false
+			    };
+			    IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+			    if (result.Succeeded)
+			    {
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
+				    // For more information on how to enable account confirmation and password reset please visit http://go.microsoft.com/fwlink/?LinkID=320771
+				    // Send an email with this link
+					//string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+				    string code = Guid.NewGuid().ToString();
+				    EmailConfirmationTokens[code] = user.UserName;
+				    var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+				    SendEmail(new EmailFormModel
+				    {
+					    FromEmail = "silentcatvallis@gmail.com",
+					    FromName = "Deniaa forum",
+					    Message = string.Format("Confirme authorization: {0}", callbackUrl)
+				    }, user.Email);
+				    //await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
-        //
+				    //await SignInAsync(user, isPersistent: false);
+
+					return View("~/Views/Account/ConfirmeEmailPls.cshtml");
+
+			    }
+			    AddErrors(result);
+			}
+
+			// If we got this far, something failed, redisplay form
+			return View(model);
+	    }
+
+	    private void SendEmail(EmailFormModel model, string userEmail)
+	    {
+		    if (ModelState.IsValid)
+		    {
+
+
+
+			    var fromAddress = new MailAddress("silentcatvallis@gmail.com", "Deniaa forum");
+			    var toAddress = new MailAddress(userEmail, "Dear user");
+			    const string fromPassword = "oh no, this is not my real password :)";
+			    const string subject = "Confirme your email";
+			    const string body = "Email From: {0} ({1})Message: {2}";
+
+			    var smtp = new SmtpClient
+			    {
+				    Host = "smtp.gmail.com",
+				    Port = 587,
+				    EnableSsl = true,
+				    DeliveryMethod = SmtpDeliveryMethod.Network,
+				    UseDefaultCredentials = false,
+				    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+			    };
+			    using (var message = new MailMessage(fromAddress, toAddress)
+			    {
+				    Subject = subject,
+				    Body = string.Format(body, model.FromName, model.FromEmail, model.Message)
+			    })
+			    {
+				    smtp.Send(message);
+			    }
+		    }
+	    }
+
+	    //
         // GET: /Account/ConfirmEmail
         [AllowAnonymous]
         public async Task<ActionResult> ConfirmEmail(string userId, string code)
@@ -124,17 +186,27 @@ namespace Forum.Controllers
                 return View("Error");
             }
 
-            IdentityResult result = await UserManager.ConfirmEmailAsync(userId, code);
-            if (result.Succeeded)
+            //IdentityResult result = await UserManager.ConfirmEmailAsync(userId, code);
+            if (EmailConfirmationTokens.ContainsKey(code))
             {
-                return View("ConfirmEmail");
+	            var userName = EmailConfirmationTokens[code];
+	            var user = ForumDatabase.Users.FirstOrDefault(u => u.Id == userId && u.UserName == userName);
+	            if (user != null)
+	            {
+		            user.EmailConfirmed = true;
+		            await ForumDatabase.SaveChangesAsync();
+		            EmailConfirmationTokens.Remove(code);
+	            }
+	            return View("ConfirmEmail");
             }
             else
             {
-                AddErrors(result);
+                AddErrors(new IdentityResult("There are no users for this token"));
                 return View();
             }
         }
+
+		
 
         //
         // GET: /Account/ForgotPassword
@@ -555,5 +627,10 @@ namespace Forum.Controllers
             }
         }
         #endregion
-    }
+
+	    public ActionResult ConfirmeEmailPls()
+	    {
+		    return View();
+	    }
+	}
 }

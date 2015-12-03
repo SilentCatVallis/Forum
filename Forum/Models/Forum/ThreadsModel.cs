@@ -7,11 +7,14 @@ namespace Forum.Models.Forum
 {
 	public class ThreadsModel
 	{
-		public ThreadsModel(string[] threadsName)
+		public ThreadsModel(Dictionary<string, string[]> threads, bool isAdmin)
 		{
-			ThreadNames = threadsName;
+			Threads = threads;
+			IsAdmin = isAdmin;
 		}
 
-		public string[] ThreadNames { get; private set; }
+		public bool IsAdmin { get; set; }
+
+		public Dictionary<string, string[]> Threads { get; private set; }
 	}
 }

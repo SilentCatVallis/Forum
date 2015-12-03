@@ -1,0 +1,30 @@
+﻿@model Forum.Models.Forum.UsersModel
+
+@{
+	ViewBag.Title = "title";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<ul class="users-list">
+	@foreach (var u in Model.Names)
+	{
+		<li id="@u" class="user-block">
+			<div class="user-name">@u</div>
+			<button type="button" class="user-element btn btn-danger" onclick="deleteUser('@u')">Delete user</button>
+			@if (Model.IsAdmin)
+			{
+				if (Model.Admins.Contains(u))
+				{
+					<button type="button" class="user-element btn btn-default" onclick="disableAdmin('@u')">Disable admin</button>
+					<span class="label label-success user-name">Admin</span>
+				}
+				else
+				{
+					<button type="button" class="user-element btn btn-info" onclick="enableAdmin('@u')">Make admin</button>
+				}
+			}
+		</li>
+	}
+</ul>
+
+<script src="~/Scripts/Forum/users.js"></script>
